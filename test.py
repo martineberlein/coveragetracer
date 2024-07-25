@@ -10,4 +10,16 @@ if __name__ == "__main__":
     report = analyzer.get_coverage()
     print(report)
     print(report.coverage_data)
-    print(report.total_executable_lines)
+
+    trigg = dict()
+    for file, lines in report.total_executable_lines.items():
+        trigg[file] = lines.intersection(report.coverage_data[file])
+
+    print(trigg)
+    su = 0
+    for file, lines in trigg.items():
+        print(f"{file}: {len(lines)}")
+        su += len(lines)
+
+    print(f"Total: {su}")
+    print(f"Coverage: {su / sum(len(lines) for lines in report.total_executable_lines.values())}")
