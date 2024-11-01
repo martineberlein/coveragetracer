@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools >= 68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coverageanalyzer"
+version = "0.1.0"
+authors = [
+    { name = "Martin Eberlein", email = "martin.eberlein@hu-berlin.de" },
+]
+readme = "README.md"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Testing"
+]
+keywords = [ "debugging"]
+requires-python = ">=3.12"
+dependencies = [
+    "coverage>=7.6.4",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/martineberlein/coverageatracer"
+"Bug Tracker" = "https://github.com/martineberlein/coverageatracer/issues"
+
+[project.optional-dependencies]
+dev = [
+    "twine",
+    "black",
+    "juypter",
+    "pytest>=7.2.2",
+    "pytest-cov>=4.1.0",
+    "pytest-html>=3.2.0",
+]
+
+[tool.setuptools.package-data]
+"avicenna" = ["resources/*"]
