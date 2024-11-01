@@ -1,4 +1,4 @@
-from tmp.example.module import add, subtract
+from dummy.module import add, subtract
 
 
 def main():

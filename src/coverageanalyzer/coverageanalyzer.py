@@ -47,6 +47,12 @@ class CoverageReport(Report):
     def get_total_coverage(self) -> float:
         """Get the total coverage of the project."""
 
+        hit = dict()
+        total = 0
+        for file, lines in self.total_executable_lines.items():
+            hit[file] = lines.intersection(self.coverage_data[file])
+            total += len(lines)
+
         total_lines = sum(len(lines) for lines in self.total_executable_lines.values())
         covered_lines = sum(len(lines) for lines in self.coverage_data.values())
         return covered_lines / total_lines
@@ -54,7 +60,7 @@ class CoverageReport(Report):
     def __repr__(self):
         return (
             f"CoverageReport("
-            f"{[str(Path(file).name) + ": " + str(lines) for file, lines in self.coverage_data.items()]}, "
+            f"{[str(Path(file).name) + ': ' + str(lines) for file, lines in self.coverage_data.items()]}, "
             f"coverage={self.get_total_coverage()})"
         )
 
@@ -110,15 +116,15 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         cov = coverage.Coverage(data_file=coverage_file)
         cov.load()
         data = cov.get_data()
-        print(cov.report())
-
-        for file in data.measured_files():
-            if coverage_data.get(file) is None:
-                coverage_data[file] = set(data.lines(file))
-            else:
-                coverage_data[file].update(data.lines(file))
+        # print(cov.report())
 
         total_executable_lines = self.get_all_executable_lines(cov)
+
+        for file in data.measured_files():
+            lines = data.lines(file)
+            clean_lines = total_executable_lines[file].intersection(lines)
+            coverage_data[file] = set(clean_lines)
+
         return coverage_data, total_executable_lines
 
     def run_coverage_for_test(self, command: List[str], test: str):
@@ -129,7 +135,6 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             )
-        print(result.stdout)
         return result
 
     def clean_coverage(self):
@@ -153,6 +158,24 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         for test in self.test:
             result = self.run_coverage_for_test(command, test)
 
+        coverage_data, total_executable_lines = self.analyze_coverage_data()
+        return CoverageReport(
+            coverage_data,
+            total_executable_lines
+        )
+
+    def reset(self):
+        self.clean_coverage()
+
+    def append_coverage(self, test):
+        command = [
+            "coverage",
+            "run",
+            f"--data-file={self.output}",
+            f"--source={self.project_root}",
+            "--append"
+        ]
+        result = self.run_coverage_for_test(command, test)
         coverage_data, total_executable_lines = self.analyze_coverage_data()
         return CoverageReport(
             coverage_data,

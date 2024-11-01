@@ -1,9 +1,3 @@
-import trace
-import sys
-import os
-import coverage
-
-
 if __name__ == '__main__':
     import coverage
 
@@ -15,7 +9,7 @@ if __name__ == '__main__':
     cov.start()
 
     # Run the main script
-    from tmp.example.example import main
+    from dummy.example import main
 
     main()
     from tmp.example.calc import main
