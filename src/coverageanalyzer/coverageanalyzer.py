@@ -1,17 +1,22 @@
 from typing import Optional, Dict, Set, Tuple, List
-
 from abc import ABC, abstractmethod
 import os
 import subprocess
 from pathlib import Path
 import coverage
 
-
 COVERAGE = "coverage"
 
 
 class Report:
-    """A report of the coverage data."""
+    """
+    Represents a generic coverage report.
+
+    Attributes:
+        command: The command used to generate the report.
+        successful: Indicates if the command ran successfully.
+        raised_exception: Stores any exception raised during execution.
+    """
 
     def __init__(self, command: str):
         self.command: str = command
@@ -23,7 +28,13 @@ class Report:
 
 
 class CoverageReport(Report):
-    """A report of the coverage data."""
+    """
+    Coverage report detailing coverage data and executable lines.
+
+    Attributes:
+        coverage_data: Dictionary with files as keys and covered lines as values.
+        total_executable_lines: Dictionary with files as keys and all executable lines as values.
+    """
 
     def __init__(
         self,
@@ -35,8 +46,15 @@ class CoverageReport(Report):
         self.total_executable_lines = total_executable_lines
 
     def get_file_coverage(self, file: str) -> float:
-        """Get the coverage of a file."""
+        """
+        Calculates the coverage for a specific file.
 
+        Args:
+            file: The path of the file to calculate coverage for.
+
+        Returns:
+            The coverage as a float between 0 and 1.
+        """
         if file not in self.coverage_data:
             return 0.0
 
@@ -45,14 +63,12 @@ class CoverageReport(Report):
         return covered_lines / total_lines
 
     def get_total_coverage(self) -> float:
-        """Get the total coverage of the project."""
+        """
+        Calculates the overall project coverage.
 
-        hit = dict()
-        total = 0
-        for file, lines in self.total_executable_lines.items():
-            hit[file] = lines.intersection(self.coverage_data[file])
-            total += len(lines)
-
+        Returns:
+            The total coverage as a float between 0 and 1.
+        """
         total_lines = sum(len(lines) for lines in self.total_executable_lines.values())
         covered_lines = sum(len(lines) for lines in self.coverage_data.values())
         return covered_lines / total_lines
@@ -66,40 +82,55 @@ class CoverageReport(Report):
 
 
 class CoverageAnalyzer(ABC):
-    """Analyze coverage data."""
+    """Abstract base class for analyzing code coverage.
 
-    def __init__(
-        self,
-        project_root: os.PathLike,
-        test: List[str],
-    ):
+    Attributes:
+        project_root: Root directory of the project.
+    """
+
+    def __init__(self, project_root: os.PathLike):
         self.project_root = project_root
-        self.test: List[str] = test
 
     @abstractmethod
-    def get_coverage(self):
-        """Run the tests with coverage and analyze the results."""
+    def get_coverage(self, tests: List[str]):
+        """Run the provided tests with coverage and analyze results.
+
+        Args:
+            tests: List of test commands or scripts to execute.
+        """
         pass
 
 
 class CoveragePyAnalyzer(CoverageAnalyzer):
-    """Analyze coverage data using the coverage.py module."""
+    """Analyzes code coverage using the coverage.py module.
+
+    Attributes:
+        project_root: Root directory of the project.
+        harness: Optional path to a test harness.
+        output: Optional path to coverage output file.
+    """
 
     def __init__(
         self,
         project_root: os.PathLike,
-        test: str | List[str],
         harness: Optional[os.PathLike] = None,
         output: Optional[os.PathLike] = None,
     ):
-        tests = test if isinstance(test, list) else [test]
-        super().__init__(project_root, tests)
+        super().__init__(project_root)
         self.output = output if output else Path(project_root) / ".coverage"
         self.harness = harness if harness else Path(project_root) / "harness.py"
 
     @staticmethod
     def get_all_executable_lines(cov: coverage.Coverage) -> Dict[str, Set[int]]:
-        """Get all executable lines from the coverage data."""
+        """
+        Fetches all executable lines from the coverage data.
+
+        Args:
+            cov: A coverage.Coverage instance with loaded data.
+
+        Returns:
+            A dictionary with file paths as keys and sets of executable line numbers as values.
+        """
         all_executable_lines = dict()
         data = cov.get_data()
         for file in data.measured_files():
@@ -109,40 +140,62 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         return all_executable_lines
 
     def analyze_coverage_data(self) -> Tuple[Dict[str, Set[int]], Dict[str, Set[int]]]:
-        """Analyze the coverage data."""
+        """
+        Analyzes the coverage data after test execution.
+
+        Returns:
+            A tuple containing:
+                - coverage_data: Dictionary with covered lines for each file.
+                - total_executable_lines: Dictionary with all executable lines for each file.
+        """
         coverage_data = dict()
-        coverage_file = self.output
-
-        cov = coverage.Coverage(data_file=coverage_file)
+        cov = coverage.Coverage(data_file=self.output)
         cov.load()
-        data = cov.get_data()
-        # print(cov.report())
-
         total_executable_lines = self.get_all_executable_lines(cov)
 
-        for file in data.measured_files():
-            lines = data.lines(file)
+        for file in cov.get_data().measured_files():
+            lines = cov.get_data().lines(file)
             clean_lines = total_executable_lines[file].intersection(lines)
             coverage_data[file] = set(clean_lines)
 
         return coverage_data, total_executable_lines
 
     def run_coverage_for_test(self, command: List[str], test: str):
+        """
+        Runs coverage for a specific test.
+
+        Args:
+            command: List of command components to run.
+            test: The specific test script or command.
+
+        Returns:
+            The result of the subprocess execution.
+        """
         result = subprocess.run(
             command + [self.harness, test],
             text=True,
             cwd=self.project_root,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            )
+        )
         return result
 
     def clean_coverage(self):
-        subprocess.run(["coverage", "erase", f"--data-file={self.output}",], cwd=self.project_root)
+        """
+        Removes existing coverage data.
+        """
+        subprocess.run(["coverage", "erase", f"--data-file={self.output}"], cwd=self.project_root)
 
-    def get_coverage(self, clean: bool = True) -> CoverageReport:
-        """Run the tests with coverage and analyze the results."""
+    def get_coverage(self, tests: List[str], clean: bool = True) -> CoverageReport:
+        """Run the provided tests with coverage and analyze results.
 
+        Args:
+            tests: List of test commands or scripts to execute.
+            clean: Whether to erase previous coverage data before running.
+
+        Returns:
+            A CoverageReport instance with the coverage data.
+        """
         if clean:
             self.clean_coverage()
 
@@ -152,32 +205,39 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
             f"--data-file={self.output}",
             f"--source={self.project_root}",
         ]
-        if len(self.test) > 1:
+        if len(tests) > 1:
             command.append("--append")
 
-        for test in self.test:
-            result = self.run_coverage_for_test(command, test)
+        for test in tests:
+            self.run_coverage_for_test(command, test)
 
         coverage_data, total_executable_lines = self.analyze_coverage_data()
-        return CoverageReport(
-            coverage_data,
-            total_executable_lines
-        )
+        return CoverageReport(coverage_data, total_executable_lines)
 
     def reset(self):
+        """
+        Resets coverage data by cleaning any existing coverage.
+        """
         self.clean_coverage()
 
     def append_coverage(self, test):
+        """
+        Appends coverage data for an additional test.
+
+        Args:
+            test: The test script or command to run.
+
+        Returns:
+            A CoverageReport with updated coverage data.
+        """
         command = [
             "coverage",
             "run",
             f"--data-file={self.output}",
             f"--source={self.project_root}",
-            "--append"
+            "--append",
         ]
-        result = self.run_coverage_for_test(command, test)
+        self.run_coverage_for_test(command, test)
         coverage_data, total_executable_lines = self.analyze_coverage_data()
-        return CoverageReport(
-            coverage_data,
-            total_executable_lines
-        )
+        return CoverageReport(coverage_data, total_executable_lines)
+
