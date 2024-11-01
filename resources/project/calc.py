@@ -28,6 +28,10 @@ def cos(x):
 
 
 def sin(x):
+    if x == 0:
+        pass
+    else:
+        pass
     return rsin(x)
 
 
