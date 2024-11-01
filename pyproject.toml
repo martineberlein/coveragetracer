@@ -31,7 +31,6 @@ dependencies = [
 dev = [
     "twine",
     "black",
-    "juypter",
     "pytest>=7.2.2",
     "pytest-cov>=4.1.0",
     "pytest-html>=3.2.0",
