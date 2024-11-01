@@ -4,8 +4,8 @@ from pathlib import Path
 if __name__ == "__main__":
     # Initialize the Coverage Analyzer for the project
     analyzer = CoveragePyAnalyzer(
-        project_root=Path.cwd() / "dummy" / "project",
-        harness=Path.cwd() / "dummy" / "harness.py",
+        project_root=Path.cwd() / "resources" / "project",
+        harness=Path.cwd() / "resources" / "harness.py",
     )
 
     # Run initial coverage and print report

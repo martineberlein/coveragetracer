@@ -40,8 +40,8 @@ from coverageanalyzer.coverageanalyzer import CoveragePyAnalyzer
 from pathlib import Path
 
 analyzer = CoveragePyAnalyzer(
-    project_root=Path("dummy/project"),
-    harness=Path("dummy/harness.py")
+    project_root=Path("resources/project"),
+    harness=Path("resources/harness.py")
 )
 
 # Run coverage analysis with a set of tests
@@ -78,7 +78,7 @@ from src.coverageanalyzer.coverageanalyzer import BlockAnalyzer
 from pathlib import Path
 
 # Initialize the analyzer for a specific project directory
-block_analyzer = BlockAnalyzer(project_root=Path("dummy/project"))
+block_analyzer = BlockAnalyzer(project_root=Path("resources/project"))
 
 # Access extracted code blocks
 for file, blocks in block_analyzer.file_blocks.items():
