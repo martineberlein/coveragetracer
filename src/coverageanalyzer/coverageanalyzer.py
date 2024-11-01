@@ -160,7 +160,7 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
 
         return coverage_data, total_executable_lines
 
-    def run_coverage_for_test(self, command: List[str], test: str):
+    def _run_command_for_test(self, command: List[str], test: str):
         """
         Runs coverage for a specific test.
 
@@ -184,7 +184,9 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         """
         Removes existing coverage data.
         """
-        subprocess.run(["coverage", "erase", f"--data-file={self.output}"], cwd=self.project_root)
+        subprocess.run(
+            ["coverage", "erase", f"--data-file={self.output}"], cwd=self.project_root
+        )
 
     def get_coverage(self, tests: List[str], clean: bool = True) -> CoverageReport:
         """Run the provided tests with coverage and analyze results.
@@ -209,7 +211,7 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
             command.append("--append")
 
         for test in tests:
-            self.run_coverage_for_test(command, test)
+            self._run_command_for_test(command, test)
 
         coverage_data, total_executable_lines = self.analyze_coverage_data()
         return CoverageReport(coverage_data, total_executable_lines)
@@ -237,7 +239,7 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
             f"--source={self.project_root}",
             "--append",
         ]
-        self.run_coverage_for_test(command, test)
+        self._run_command_for_test(command, test)
         coverage_data, total_executable_lines = self.analyze_coverage_data()
         return CoverageReport(coverage_data, total_executable_lines)
 
