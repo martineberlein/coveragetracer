@@ -27,6 +27,16 @@ class TestCoveragePyAnalyzer(unittest.TestCase):
         self.assertLessEqual(report.get_total_coverage(), 1)
         self.assertTrue(report.coverage_data)  # Ensure coverage data is populated
 
+    def test_failing_input_coverage_run(self):
+        """Test that coverage analysis runs correctly and returns a CoverageReport for failing inputs."""
+        tests = ["sqrt(-4)"]
+        report = self.analyzer.get_coverage(tests=tests)
+
+        self.assertIsInstance(report, CoverageReport)
+        self.assertGreaterEqual(report.get_total_coverage(), 0)
+        self.assertLessEqual(report.get_total_coverage(), 1)
+        self.assertTrue(report.coverage_data)  # Ensure coverage data is populated
+
     def test_append_coverage(self):
         """Test that coverage can be incrementally added with new tests."""
         self.analyzer.reset()  # Ensure clean coverage data
