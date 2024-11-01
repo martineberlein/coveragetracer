@@ -121,6 +121,15 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         self.output = output if output else Path(project_root) / ".coverage"
         self.harness = harness if harness else Path(project_root) / "harness.py"
 
+    def __enter__(self):
+        """Enter the runtime context related to this object."""
+        self.reset()  # Automatically reset (clean) coverage on entering the context
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the runtime context, ensuring coverage data is reset."""
+        self.reset()  # Clean up coverage data when exiting the context
+
     @staticmethod
     def get_all_executable_lines(cov: coverage.Coverage) -> Dict[str, Set[int]]:
         """
