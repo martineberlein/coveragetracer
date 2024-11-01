@@ -4,6 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 import coverage
+import ast
 
 COVERAGE = "coverage"
 
@@ -243,3 +244,196 @@ class CoveragePyAnalyzer(CoverageAnalyzer):
         coverage_data, total_executable_lines = self.analyze_coverage_data()
         return CoverageReport(coverage_data, total_executable_lines)
 
+
+class Block:
+    """Represents a code block in a Python file, such as a function or class.
+
+    Attributes:
+        start_line (int): The starting line number of the block.
+        end_line (int): The ending line number of the block.
+        type (str): The type of the block (e.g., "Function", "Class").
+        code (str): The original source code for the block.
+    """
+
+    def __init__(self, start_line: int, end_line: int, block_type: str, code: str):
+        self.start_line = start_line
+        self.end_line = end_line
+        self.type = block_type
+        self.code = code
+
+    def __repr__(self):
+        return f"Block(type={self.type}, lines={self.start_line}-{self.end_line})"
+
+
+class BlockAnalyzer:
+    """Analyzes Python files in a directory, identifying and storing code blocks.
+
+    Attributes:
+        file_blocks (Dict[Path, List[Block]]): A dictionary mapping file paths to lists of Block objects,
+            representing each identifiable code block in the files.
+
+    Args:
+        project_root (os.PathLike): The root directory containing the Python files to analyze.
+    """
+
+    def __init__(self, project_root: os.PathLike):
+        self.file_blocks: Dict[Path, List[Block]] = {}
+        self.collect_code_blocks_for_directory(Path(project_root))
+
+    def collect_code_blocks_for_directory(self, directory: Path):
+        """Recursively collects code blocks from all Python files in a directory.
+
+        Args:
+            directory (Path): The path of the directory to analyze.
+        """
+        for file in directory.rglob("*.py"):
+            self.file_blocks[file] = self.get_code_blocks(file)
+
+    @staticmethod
+    def get_code_blocks(file: Path) -> List[Block]:
+        """Extracts code blocks from a single Python file.
+
+        Args:
+            file (Path): The path of the Python file to analyze.
+
+        Returns:
+            List[Block]: A list of Block objects representing each identifiable code block in the file.
+        """
+        try:
+            visitor = BlockASTVisitor(file)
+            return visitor.extract_code_blocks()
+        except SyntaxError as e:
+            print(f"Syntax error in file {file}: {e}")
+            return []
+
+
+class BlockASTVisitor(ast.NodeVisitor):
+    """A visitor that traverses the AST of a Python file to extract code blocks.
+
+    Attributes:
+        file_path (Path): The path of the file being analyzed.
+        blocks (List[Block]): A list of Block objects representing the identified code blocks in the file.
+        tree (ast.AST): The parsed AST of the Python file.
+        code_lines (List[str]): The lines of code in the file, used for extracting block text.
+
+    Args:
+        file_path (Path): The path of the Python file to be analyzed.
+    """
+
+    def __init__(self, file_path: Path):
+        self.file_path = file_path
+        self.blocks = []
+
+        code = self.read_file()
+        self.tree = ast.parse(code)
+        self.code_lines = None  # Initialize to None for lazy loading of lines
+
+    def read_file(self) -> str:
+        """Reads the file's contents.
+
+        Returns:
+            str: The complete text of the file.
+        """
+        return self.file_path.read_text()
+
+    def extract_code_blocks(self) -> List[Block]:
+        """Extracts all code blocks in the file by visiting each node in the AST.
+
+        Returns:
+            List[Block]: A list of Block objects representing the code blocks in the file.
+        """
+        self.visit(self.tree)
+        return self.blocks
+
+    def get_code_lines(self) -> List[str]:
+        """Lazily loads and splits the file's code lines for block extraction."""
+        if self.code_lines is None:
+            self.code_lines = self.read_file().splitlines()
+        return self.code_lines
+
+    def add_block(self, node, block_type: str):
+        """Helper method to add a block to the list of blocks.
+
+        Args:
+            node: The AST node representing the code block.
+            block_type (str): The type of the code block.
+        """
+        start_line, end_line = node.lineno, node.body[-1].end_lineno
+        self.blocks.append(Block(start_line, end_line, block_type, ast.unparse(node)))
+
+    def add_else_block(self, node):
+        """Helper to handle 'else' blocks associated with loops or if statements."""
+        else_start, else_end = node.orelse[0].lineno, node.orelse[-1].end_lineno
+        else_code = "\n".join(self.get_code_lines()[else_start - 1 : else_end])
+        self.blocks.append(Block(else_start, else_end, "Else", else_code))
+
+    def visit_FunctionDef(self, node):
+        """Visits function definitions."""
+        self.add_block(node, "Function")
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node):
+        """Visits class definitions."""
+        self.add_block(node, "Class")
+        self.generic_visit(node)
+
+    def visit_If(self, node):
+        """Visits if statements and their else clauses."""
+        self.add_block(node, "If")
+        if node.orelse:
+            self.add_else_block(node)
+        self.generic_visit(node)
+
+    def visit_For(self, node):
+        """Visits for loops and their else clauses."""
+        self.add_block(node, "For")
+        if node.orelse:
+            self.add_else_block(node)
+        self.generic_visit(node)
+
+    def visit_While(self, node):
+        """Visits while loops and their else clauses."""
+        self.add_block(node, "While")
+        if node.orelse:
+            self.add_else_block(node)
+        self.generic_visit(node)
+
+    def visit_Try(self, node):
+        """Visits try-except blocks, including else and finally clauses."""
+        self.add_block(node, "Try")
+        if node.orelse:
+            self.add_else_block(node)
+        if node.finalbody:
+            finally_start, finally_end = (
+                node.finalbody[0].lineno,
+                node.finalbody[-1].end_lineno,
+            )
+            finally_code = "\n".join(
+                self.get_code_lines()[finally_start - 1 : finally_end]
+            )
+            self.blocks.append(
+                Block(finally_start, finally_end, "Finally", finally_code)
+            )
+        self.generic_visit(node)
+
+    def visit_With(self, node):
+        """Visits with statements."""
+        self.add_block(node, "With")
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        """Visits asynchronous function definitions."""
+        self.add_block(node, "Async Function")
+        self.generic_visit(node)
+
+    def visit_AsyncFor(self, node):
+        """Visits asynchronous for loops and their else clauses."""
+        self.add_block(node, "Async For")
+        if node.orelse:
+            self.add_else_block(node)
+        self.generic_visit(node)
+
+    def visit_AsyncWith(self, node):
+        """Visits asynchronous with statements."""
+        self.add_block(node, "Async With")
+        self.generic_visit(node)
