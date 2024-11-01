@@ -1,5 +1,10 @@
 # Python Code Coverage Analyzer
 
+![Python Version](https://img.shields.io/badge/python-3.13-blue)
+![Test Workflow](https://github.com/martineberlein/coveragetracer/actions/workflows/tests.yaml/badge.svg)
+[![License](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A Python tool to analyze code coverage and extract detailed insights into code blocks (optional). Primarily, it helps analyze the coverage of a Python project, with optional AST-based code block analysis for deeper code understanding.
 
 ## Features
