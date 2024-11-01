@@ -7,31 +7,6 @@
 
 A Python tool to analyze code coverage and extract detailed insights into code blocks (optional). Primarily, it helps analyze the coverage of a Python project, with optional AST-based code block analysis for deeper code understanding.
 
-## Features
-
-- **Coverage Analysis**: Uses `coverage.py` to assess code coverage at the function and file level.
-- **Flexible Test Execution**: Supports re-running coverage analysis with different test sets.
-- **Optional Code Block Analysis**: Uses AST parsing to extract specific code blocks (e.g., functions, classes) from Python files within a specified directory.
-
-## Installation
-
-### Prerequisites
-
-- Python 3.10 or higher
-
-### Setup
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/martineberlein/coveragetracer.git
-   cd coveragetracer
-   ```
-
-2. Install the package:
-   ```bash
-   pip install .
-   ```
-
 ## Usage
 
 ### Coverage Analysis with CoverageAnalyzer
@@ -92,3 +67,27 @@ for file, blocks in block_analyzer.file_blocks.items():
         print(block)
 ```
 
+## Features
+
+- **Coverage Analysis**: Uses `coverage.py` to assess code coverage at the function and file level.
+- **Flexible Test Execution**: Supports re-running coverage analysis with different test sets.
+- **Optional Code Block Analysis**: Uses AST parsing to extract specific code blocks (e.g., functions, classes) from Python files within a specified directory.
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10 or higher
+
+### Setup
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/martineberlein/coveragetracer.git
+   cd coveragetracer
+   ```
+
+2. Install the package:
+   ```bash
+   pip install .
+   ```
