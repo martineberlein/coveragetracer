@@ -1,4 +1,4 @@
-from coverageanalyzer.coverageanalyzer import CoveragePyAnalyzer
+from coverageanalyzer.line import CoveragePyAnalyzer
 from pathlib import Path
 
 if __name__ == "__main__":

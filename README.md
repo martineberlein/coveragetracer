@@ -16,7 +16,7 @@ The CoverageAnalyzer provides a flexible way to analyze code coverage by running
 Example usage:
 
 ```python
-from coverageanalyzer.coverageanalyzer import CoveragePyAnalyzer
+from coverageanalyzer.line import CoveragePyAnalyzer
 from pathlib import Path
 
 analyzer = CoveragePyAnalyzer(
@@ -54,11 +54,11 @@ The BlockAnalyzer provides an optional feature for identifying specific code blo
 Example usage:
 
 ```python
-from src.coverageanalyzer.coverageanalyzer import BlockAnalyzer
+from coverageanalyzer.block import BlockCoveragePyAnalyzer
 from pathlib import Path
 
 # Initialize the analyzer for a specific project directory
-block_analyzer = BlockAnalyzer(project_root=Path("resources/project"))
+block_analyzer = BlockCoveragePyAnalyzer(project_root=Path("resources/project"))
 
 # Access extracted code blocks
 for file, blocks in block_analyzer.file_blocks.items():
