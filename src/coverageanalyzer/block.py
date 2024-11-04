@@ -30,6 +30,19 @@ class Block:
     def __repr__(self):
         return f"Block(type={self.type}, lines={self.start_line}-{self.end_line})"
 
+    def __eq__(self, other):
+        if not isinstance(other, Block):
+            return False
+        return (
+            self.file_path == other.file_path
+            and self.start_line == other.start_line
+            and self.end_line == other.end_line
+            and self.type == other.type
+        )
+
+    def __hash__(self):
+        return hash((self.file_path, self.start_line, self.end_line, self.type))
+
 
 class BlockCoverageReport(CoverageReport):
     """Block-level coverage data report for Python files.
