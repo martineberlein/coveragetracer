@@ -61,7 +61,7 @@ class BlockCoverageReport(CoverageReport):
         self.coverage_data = coverage_data
         self.total_executable_blocks = total_executable_blocks
 
-    def _get_covered_blocks(self, file: str) -> Set[Block]:
+    def _get_covered_blocks(self, file: str) -> Set['Block']:
         """Identifies blocks in a file that have been executed.
 
         Args:
