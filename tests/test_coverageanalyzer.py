@@ -13,8 +13,7 @@ class TestCoveragePyAnalyzer(unittest.TestCase):
     def setUp(self):
         """Set up a fresh CoveragePyAnalyzer instance before each test."""
         self.analyzer = CoveragePyAnalyzer(
-            project_root=PROJECT_ROOT,
-            harness=HARNESS_PATH
+            project_root=PROJECT_ROOT, harness=HARNESS_PATH
         )
 
     def test_initial_coverage_run(self):
@@ -63,7 +62,9 @@ class TestCoveragePyAnalyzer(unittest.TestCase):
 
         self.assertGreaterEqual(fresh_coverage, 0)
         self.assertLessEqual(fresh_coverage, 1)
-        self.assertTrue(fresh_report.coverage_data)  # Coverage data should be populated again
+        self.assertTrue(
+            fresh_report.coverage_data
+        )  # Coverage data should be populated again
 
     def test_clean_coverage(self):
         """Test that clean_coverage method erases previous coverage data."""
@@ -92,7 +93,9 @@ class TestCoveragePyAnalyzer(unittest.TestCase):
     def test_context_manager_resets_coverage(self):
         """Test that CoveragePyAnalyzer as a context manager resets coverage data on enter and exit."""
 
-        with CoveragePyAnalyzer(project_root=PROJECT_ROOT, harness=HARNESS_PATH) as analyzer:
+        with CoveragePyAnalyzer(
+            project_root=PROJECT_ROOT, harness=HARNESS_PATH
+        ) as analyzer:
             # Initial coverage run within the context
             report = analyzer.get_coverage(tests=["sqrt(4)"])
             initial_coverage = report.get_total_coverage()
@@ -103,7 +106,9 @@ class TestCoveragePyAnalyzer(unittest.TestCase):
             self.assertTrue(report.coverage_data)
 
         # After exiting the context, re-enter and verify coverage data is reset
-        with CoveragePyAnalyzer(project_root=PROJECT_ROOT, harness=HARNESS_PATH) as analyzer:
+        with CoveragePyAnalyzer(
+            project_root=PROJECT_ROOT, harness=HARNESS_PATH
+        ) as analyzer:
             report = analyzer.get_coverage(tests=["cos(0)"])
             new_coverage = report.get_total_coverage()
 

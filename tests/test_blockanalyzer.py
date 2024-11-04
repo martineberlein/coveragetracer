@@ -38,10 +38,8 @@ else:
         calc_project_root = Path.cwd() / "resources" / "project"
         calc_harness_path = Path.cwd() / "resources" / "harness.py"
         self.analyzer = BlockCoveragePyAnalyzer(
-            project_root=calc_project_root,
-            harness=calc_harness_path
+            project_root=calc_project_root, harness=calc_harness_path
         )
-
 
     def tearDown(self):
         """Clean up temporary files."""
@@ -130,7 +128,13 @@ else:
 
     def test_repr_method_in_block(self):
         """Test that Block's __repr__ method produces the expected output."""
-        block = Block(file_path= "", start_line=1, end_line=5, block_type="Function", code="def test():\n    pass")
+        block = Block(
+            file_path="",
+            start_line=1,
+            end_line=5,
+            block_type="Function",
+            code="def test():\n    pass",
+        )
         repr_output = repr(block)
         self.assertEqual(repr_output, "Block(type=Function, lines=1-5)")
 
@@ -139,11 +143,13 @@ else:
 
         # Initialize a BlockAnalyzer object
         analyzer = BlockCoveragePyAnalyzer(
-            project_root= Path.cwd() / "resources" / "project",
-            harness = Path.cwd() / "resources" / "harness.py",
+            project_root=Path.cwd() / "resources" / "project",
+            harness=Path.cwd() / "resources" / "harness.py",
         )
 
-        report = analyzer.get_coverage(tests=["sqrt(12)", "tan(10)", "sin(0)"], clean=True)
+        report = analyzer.get_coverage(
+            tests=["sqrt(12)", "tan(10)", "sin(0)"], clean=True
+        )
 
         for file, blocks in report.total_executable_blocks.items():
             for block in blocks:
@@ -189,7 +195,9 @@ else:
             for block in blocks:
                 if report.is_block_covered(block):
                     covered_blocks_count += 1
-                print(f"Block {block.type} in {file} covered: {report.is_block_covered(block)}")
+                print(
+                    f"Block {block.type} in {file} covered: {report.is_block_covered(block)}"
+                )
 
         self.assertGreater(covered_blocks_count, 0, "No blocks were marked as covered")
 
@@ -199,21 +207,19 @@ else:
         self.analyzer.get_coverage(tests=["sqrt(12)", "tan(10)"], clean=True)
         # Reset and run again
         self.analyzer.reset()
-        report_after_reset = self.analyzer.get_coverage(
-            tests=["sin(0)"]
-        )
+        report_after_reset = self.analyzer.get_coverage(tests=["sin(0)"])
 
         # Ensure coverage after reset is independent of the initial run
         total_coverage_after_reset = report_after_reset.get_total_coverage()
         self.assertGreaterEqual(total_coverage_after_reset, 0.0)
         self.assertLessEqual(total_coverage_after_reset, 1.0)
-        print(f"Total Project Coverage after reset: {total_coverage_after_reset * 100:.2f}%")
+        print(
+            f"Total Project Coverage after reset: {total_coverage_after_reset * 100:.2f}%"
+        )
 
     def test_coverage_append(self):
         """Test that additional tests can be appended to the coverage data."""
-        initial_report = self.analyzer.get_coverage(
-            tests=["sqrt(12)"], clean=True
-        )
+        initial_report = self.analyzer.get_coverage(tests=["sqrt(12)"], clean=True)
         initial_coverage = initial_report.get_total_coverage()
 
         appended_report = self.analyzer.append_coverage(test="tan(10)")

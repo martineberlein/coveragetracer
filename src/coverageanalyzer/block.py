@@ -61,7 +61,7 @@ class BlockCoverageReport(CoverageReport):
         self.coverage_data = coverage_data
         self.total_executable_blocks = total_executable_blocks
 
-    def _get_covered_blocks(self, file: str) -> Set['Block']:
+    def _get_covered_blocks(self, file: str) -> Set["Block"]:
         """Identifies blocks in a file that have been executed.
 
         Args:
@@ -123,7 +123,8 @@ class BlockCoverageReport(CoverageReport):
     def __repr__(self):
         return (
             f"BlockCoverageReport("
-            f"{[file + ': ' + str(len(self._get_covered_blocks(file))) + '/' + str(len(blocks)) for file, blocks in self.total_executable_blocks.items()]}, "
+            f"{[file + ': ' + str(len(self._get_covered_blocks(file))) + '/'
+                + str(len(blocks)) for file, blocks in self.total_executable_blocks.items()]}, "
             f"total_coverage={self.get_total_coverage() * 100:.2f}%)"
         )
 

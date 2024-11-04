@@ -9,6 +9,5 @@ def find_even(numbers):
 
 if __name__ == "__main__":
     # Test cases
-    find_even([1, 3, 5])      # No even number found.
-    find_even([1, 3, 5, 6])   # Found an even number: 6
-
+    find_even([1, 3, 5])  # No even number found.
+    find_even([1, 3, 5, 6])  # Found an even number: 6

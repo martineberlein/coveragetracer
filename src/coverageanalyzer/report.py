@@ -51,4 +51,3 @@ class CoverageReport(Report, ABC):
             The total coverage as a float between 0 and 1.
         """
         raise NotImplementedError()
-
