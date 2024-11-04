@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from coverageanalyzer.coverageanalyzer import CoveragePyAnalyzer, CoverageReport
+from coverageanalyzer.line import CoveragePyAnalyzer, CoverageReport
 
 # Set up paths for the dummy project and test harness
 PROJECT_ROOT = Path.cwd() / "resources" / "project"
