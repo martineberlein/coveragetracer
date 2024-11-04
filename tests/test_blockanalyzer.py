@@ -35,6 +35,14 @@ else:
         self.test_file = self.project_root / "test_file.py"
         self.test_file.write_text(self.sample_code)
 
+        calc_project_root = Path.cwd() / "resources" / "project"
+        calc_harness_path = Path.cwd() / "resources" / "harness.py"
+        self.analyzer = BlockCoveragePyAnalyzer(
+            project_root=calc_project_root,
+            harness=calc_harness_path
+        )
+
+
     def tearDown(self):
         """Clean up temporary files."""
         self.test_dir.cleanup()
@@ -148,6 +156,71 @@ else:
 
         # Final reset after coverage tracking
         analyzer.reset()
+
+    def test_block_coverage_report_initialization(self):
+        """Test initializing a BlockCoveragePyAnalyzer and generating a BlockCoverageReport."""
+        report = self.analyzer.get_coverage(
+            tests=["sqrt(12)", "tan(10)", "sin(0)"], clean=True
+        )
+
+        self.assertIsInstance(report, BlockCoverageReport)
+        self.assertEqual(report.get_total_coverage(), 0.75)
+
+    def test_block_coverage_per_file(self):
+        """Test block coverage calculation for individual files."""
+        report = self.analyzer.get_coverage(
+            tests=["sqrt(12)", "tan(10)", "sin(0)"], clean=True
+        )
+
+        for file, blocks in report.total_executable_blocks.items():
+            file_coverage = report.get_file_coverage(file)
+            self.assertGreaterEqual(file_coverage, 0.0)
+            self.assertLessEqual(file_coverage, 1.0)
+            print(f"Coverage for {file}: {file_coverage * 100:.2f}%")
+
+    def test_block_is_covered(self):
+        """Test that specific blocks are marked as covered when appropriate."""
+        report = self.analyzer.get_coverage(
+            tests=["sqrt(12)", "tan(10)", "sin(0)"], clean=True
+        )
+
+        covered_blocks_count = 0
+        for file, blocks in report.total_executable_blocks.items():
+            for block in blocks:
+                if report.is_block_covered(block):
+                    covered_blocks_count += 1
+                print(f"Block {block.type} in {file} covered: {report.is_block_covered(block)}")
+
+        self.assertGreater(covered_blocks_count, 0, "No blocks were marked as covered")
+
+    def test_coverage_reset(self):
+        """Test that coverage data is reset properly."""
+        # Initial coverage run
+        self.analyzer.get_coverage(tests=["sqrt(12)", "tan(10)"], clean=True)
+        # Reset and run again
+        self.analyzer.reset()
+        report_after_reset = self.analyzer.get_coverage(
+            tests=["sin(0)"]
+        )
+
+        # Ensure coverage after reset is independent of the initial run
+        total_coverage_after_reset = report_after_reset.get_total_coverage()
+        self.assertGreaterEqual(total_coverage_after_reset, 0.0)
+        self.assertLessEqual(total_coverage_after_reset, 1.0)
+        print(f"Total Project Coverage after reset: {total_coverage_after_reset * 100:.2f}%")
+
+    def test_coverage_append(self):
+        """Test that additional tests can be appended to the coverage data."""
+        initial_report = self.analyzer.get_coverage(
+            tests=["sqrt(12)"], clean=True
+        )
+        initial_coverage = initial_report.get_total_coverage()
+
+        appended_report = self.analyzer.append_coverage(test="tan(10)")
+        appended_coverage = appended_report.get_total_coverage()
+
+        self.assertGreaterEqual(appended_coverage, initial_coverage)
+        print(f"Coverage after appending: {appended_coverage * 100:.2f}%")
 
 
 if __name__ == "__main__":
